@@ -2,8 +2,9 @@ var querystring = require('querystring')
 	util = require('util'),
 	http = require('http'),
 	gcm = require('node-gcm'),
+	cronJob = require('cron').CronJob,
 	sqlite3 = require('sqlite3').verbose(),
-	db = new sqlite3.Database('mtga.db');
+	db = new sqlite3.Database('mtga.db'),
 
 db.serialize(function(){
 	db.run('CREATE TABLE IF NOT EXISTS users(name UNIQUE)');
@@ -60,6 +61,15 @@ server = http.createServer(function (req, res) {
 			break;
 	}
 
+}).listen(8124, "127.0.0.1");
+
+job = new cronJob('*/1 * * * *', function(){
+    console.log('===Usuarios actuales===');
+    db = new sqlite3.Database('mtga.db');
+	db.each('SELECT * FROM users',function(err,row){
+		console.log(row);
+	});
+	db.close();
 	/*
 	// create a message with default values
 	var message = new gcm.Message();
@@ -81,8 +91,9 @@ server = http.createServer(function (req, res) {
     	console.log(result);
 	});
 	*/
-
-}).listen(8124, "127.0.0.1");
+}, function(){
+	console.log('Tarea Principal finalizada');
+}, true);
 
 function registerdata(broutedata){
 	var data = querystring.parse(broutedata);
@@ -90,9 +101,6 @@ function registerdata(broutedata){
 	console.log(data);
 	db = new sqlite3.Database('mtga.db');
 	db.run('INSERT INTO users(name) VALUES ("'+data.postmsn+'")');
-	db.each('SELECT * FROM users',function(err,row){
-		console.log(row);
-	});
 	db.close();
 }
 
