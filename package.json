@@ -1,0 +1,28 @@
+{
+  "name": "mtgassistance-server",
+  "description": "GCM server for mtgassistance",
+  "version": "0.0.1",
+  "author": {
+    "name": "Christian Lopez",
+    "email": "lopezchr@gmail.com",
+    "url": "https://github.com/lopezchr"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lopezchr/mtganode.git"
+  },
+  "private": true,
+  "dependencies": {
+    "cron": ">=1.0.1",
+    "sqlite3": ">=2.1.9",
+    "node-gcm": ">=0.9.6"
+  },
+  "main": "app",
+  "subdomain": "mtganodeserver",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "engines": {
+    "node": "0.8.x"
+  }
+}
