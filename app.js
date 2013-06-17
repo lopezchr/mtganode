@@ -3,19 +3,7 @@ var querystring = require('querystring')
 	http = require('http'),
 	gcm = require('node-gcm'),
 	cronJob = require('cron').CronJob,
-	sqlite3 = require('sqlite3').verbose(),
-	db = new sqlite3.Database('mtga.db'),
-
-db.serialize(function(){
-	db.run('CREATE TABLE IF NOT EXISTS users(name UNIQUE)');
-});
-
-db.close();
-/*var mysql = require('mysql');
-var client = mysql.createClient({
-    user: 'root',
-    password: 'admin',
-});*/
+	sqlite3 = require('sqlite3').verbose();
 
 server = http.createServer(function (req, res) {
 
@@ -66,31 +54,47 @@ server = http.createServer(function (req, res) {
 job = new cronJob('*/1 * * * *', function(){
     console.log('===Usuarios actuales===');
     db = new sqlite3.Database('mtga.db');
-	db.each('SELECT * FROM users',function(err,row){
-		console.log(row);
-	});
-	db.close();
-	/*
-	// create a message with default values
-	var message = new gcm.Message();
 
-	// or with object values
-	var message = new gcm.Message({
-	    collapseKey: 'demo',
-	    delayWhileIdle: true,
-	    timeToLive: 3,
-	    data: {
-	        key1: 'message1',
-	        key2: 'message2'
-	    }
-	});
-	var sender = new gcm.Sender('AIzaSyBNW_xECtb8N32bE-arSYKfnPN4jAXlR4o');
-	var registrationIds = [];
+	db.all('SELECT gcm_id FROM users WHERE status = 0',function(err,rows){
 
-	sender.send(message, registrationIds, 4, function (err, result) {
-    	console.log(result);
+	    var registrationIds = [];
+		rows.forEach(function(row){
+			registrationIds.push(row.gcm_id);
+		});
+		console.log(registrationIds);
+
+		if(registrationIds.length > 0){
+
+			// create a message with default values
+			var message = new gcm.Message();
+
+			// or with object values
+			var message = new gcm.Message({
+			    collapseKey: 'demo',
+			    delayWhileIdle: true,
+			    timeToLive: 3,
+			    data: {
+			        key1: 'message1',
+			        key2: 'message2'
+			    }
+			});
+			var sender = new gcm.Sender('AIzaSyBNW_xECtb8N32bE-arSYKfnPN4jAXlR4o');
+
+			sender.send(message, registrationIds, 4, function (err, result) {
+				console.log(err);
+		    	console.log(result);
+		    	/*
+		    	registrationIds.forEach(function(id){
+		    		db.run('UPDATE users SET status = 1 WHERE gcm_id = ?',id);
+		    	});*/
+				db.close();
+				console.log('Fin del proceso')
+			});
+		}else{
+			db.close();
+		}
+
 	});
-	*/
 }, function(){
 	console.log('Tarea Principal finalizada');
 }, true);
@@ -100,7 +104,7 @@ function registerdata(broutedata){
 	console.log('////////////////////data parsed')
 	console.log(data);
 	db = new sqlite3.Database('mtga.db');
-	db.run('INSERT INTO users(name) VALUES ("'+data.postmsn+'")');
+	db.run('INSERT INTO users(gcm_id) VALUES ("'+data.postmsn+'")');
 	db.close();
 }
 
